@@ -19,8 +19,8 @@ media
 lowpoweradmin/mainapp/__pycache__/
 lowpoweradmin/mainapp/**/__pycache__/
 
-lowpoweradmin/lowpoweradmin/static/js/*.min.js
-lowpoweradmin/lowpoweradmin/staticfiles/*
+lowpoweradmin/static/js/*.min.js
+lowpoweradmin/staticfiles/*
 
 lowpoweradmin/lowpoweradmin/__pycache__/
 lowpoweradmin/lowpoweradmin/**/__pycache__/
