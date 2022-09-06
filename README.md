@@ -13,7 +13,6 @@ Use powershell or cmd and type by order, please see below.
 - `pip install virtualenv`
 - `virtualenv -p python3 .` for create virtualenv in root directory
 - `Scripts\activate` for activate environment
-- `cd lowpoweradmin`
 - `pip install -r requirements.txt`
 - `cd ..`
 - `cd builder`
@@ -25,6 +24,7 @@ Use powershell or cmd and type by order, please see below.
 
 # How to test local
 
+- `cd ..`
 - `cd lowpoweradmin`
 - `python manage.py runserver`
 
