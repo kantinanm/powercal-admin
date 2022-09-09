@@ -1,41 +1,58 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
+
 var bodyParser = require("body-parser");
 const path = require("path");
 const cors = require("cors");
+const moment = require("moment-timezone");
+
+const { placeOrder } =require('./QueueManagement');
 
 const APP_PORT = 3000;
 var app = express();
 
 const corsOptions = {
-    origin: "*", //origin: ['https://www.section.io', 'https://www.google.com/']
+    origin: "*", //origin: ['https://xxx.nu.ac.th', 'http://xxx.nu.ac.th/']
     methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
     credentials: true,
 };
 
+app.use(bodyParser.json());
 app.use(cors(corsOptions));
-//app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 /** specify the directory from where to serve static assets such as JavaScript, CSS, images **/
 app.use(express.static(path.join(__dirname, "public")));
 
+var numUsers=0; // current total users
+var allClients = []; //check ena /disable
+
+
 const server = http.createServer(app);
 //const io = new Server(server);
 const io = require('socket.io')(server, {
-    cors: {
-      origin: '*',
-    }
+    cors: corsOptions
 });
 const welcomeMsg = "โปรแกรมวิเคราะห์ทางไฟฟ้า, ภาควิชาวิศวกรรมไฟฟ้าและคอมพิวเตอร์ คณะวิศวกรรมศาสตร์, Lower-Voltage System Analysis Tools";
 
 io.on("connection", (socket) => {
     console.log("a user connected");
+    ++numUsers;
+    
     socket.emit("hi", welcomeMsg);
   
     socket.on("disconnect", () => {
       console.log("user disconnected");
+      console.log("Remove token is "+socket.token);
+      
+      //Remove element match token in allClients [] arrays 
+      //const words = ['spray', 'limit', 'elite', 'exuberant', 'destruction', 'present'];
+
+      //const result = words.filter(word => word.length > 6);
+
+      //console.log(result);
+
+      numUsers--; // decrease users
     });
   
     socket.on("message", (data) => {
@@ -43,14 +60,88 @@ io.on("connection", (socket) => {
       const packet = JSON.parse(data);
       console.log("Message from client is :" + packet.message);
     });
+
+    socket.on('joidRoom', (message, callback) => {
+        console.log('joidRoom', message);
+        //add to array allClients [], {data.token,data.ip}
+        // const objClient = {token: message.token, ip: message.ip};
+        // allClients.push(objClient); // collected 
+
+        socket.token=message.token;
+
+        var clientProfile={'token':message.token,'ip':message.ip};
+        allClients.push(clientProfile); // collected 
+
+        var health_data={
+          wating_clients:allClients.length,
+          connected:numUsers
+        }
+
+
+        //sent system health data to notify user in django project.
+        callback(health_data);
+            //var data={
+            //    ip:message.ip,
+            //    token:message.token
+            //}
+             //////   store 
+            //socket.time=moment.tz("Asia/Bangkok").format("YYYY-MM-DD THH:mm:ss.SSSZ");
+            //socket.token=data.token;
+            //socket.ip=data.ip;
+             //////   store 
+          
+            //++numUsers;
+            //allClients.push(socket);
+            //console.log('store socket =', socket);
+            //console.log('store token =', socket.token);
+            //console.log('store ip =', socket.ip);
+            //console.log('store time =', socket.time);
+            //console.log('Num of store client =', allClients.length);
+  
+            //socket.broadcast.emit('newPlayerJoin', data);
+        
+    });
+
+    socket.on('startGame', (data, callback) => {
+        console.log('startGame ', data);
+        // implement
+
+        
+        // add to bee-queue
+        // placeOrder
+        // process
+
+
+
+
+        //if cal finish
+        // release obj from array
+        // var recentClient = allClients.shift();
+        // var token_finished=recentClient.token;
+
+        var result = {
+          time: moment.tz("Asia/Bangkok").format("YYYY-MM-DD THH:mm:ss.SSSZ"),
+          fileName: 'chart.png',
+          _token: token_finished,
+       };
+
+        // set result to django
+        callback(result);
+  
+        //  io.emit('goToPage', data.page);
+        //  callback('This start time :'+new Date().getTime());
+  
+    });
+      
+    socket.on('getNumOfPlayers', (callback) => {
+          callback(allClients.length);
+    });
+
 });
 
 var port = process.env.PORT || APP_PORT;
 
-/*app.listen(port, function () {
-  console.log("Starting node.js on port " + port);
-});*/
 
 server.listen(port, () => {
-  console.log("listening on *:" + port);
+  console.log(`Server open at:${port}`);
 });

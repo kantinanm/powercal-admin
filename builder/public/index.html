@@ -11,11 +11,44 @@
      <!--<script src="{% static 'js/main.min.js' %}"></script>-->
     
     <!--<link rel="stylesheet" href="{% static 'css/main.css' %}"> -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript">
+        
+        var socket = io();
+        // optionally use io('http://localhost:3000');
+        // but make *SURE* it matches the jScript src
+
+        socket.on('connect', () => {
+            console.log('Connected to server');
+        });
+        
+        socket.on('disconnect', () => {
+            console.log('Disconnected from server');
+        });
+
+        var numOfUser=0;
+        var MINIMUM_CLIENT=2;
+        socket.emit('getNumOfPlayers', function (data) {
+            console.log('Num of users =', data);
+            numOfUser=data;
+            
+            if(numOfUser>MINIMUM_CLIENT){
+                // ena btn start
+                //$("#btnStartGame").removeAttr('disabled');
+                console.log('Active client quene!', data);
+            }
+							
+		});
+
+    socket.on("hi", (data) => {
+      console.log(data);
+      console.log("Message from server.");
+    });
+
+    </script>
 </head>
 <body>
     <div>Admin</div>
 </body>
-<script type="text/javascript">
 
-</script>
 </html>

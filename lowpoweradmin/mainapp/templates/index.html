@@ -1,6 +1,8 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
         {% load static %}
+        {% load env_extras %}
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -20,10 +22,13 @@
     <!---->
     <input type="text" name="txtMesssage" id="txtMesssage" />
     <input type="button" value="Send" id="btnSubmit"> 
+    <input id="hidMaxClient" value="{{ MAXIMUM_CLIENT }}" type="hidden" />
+    <input id="hidLimit" value="{% get_env_var 'LIMIT' %}" type="hidden" />
+    {% csrf_token %}
 </body>
 
 <script>
-  //var socket = io();
+
   //var socket = io.connect("localhost", {port: 3000});
   var socket = io('http://localhost:3000');
   //socket = io("http://localhost:3000");
@@ -37,20 +42,106 @@
 
   submit.addEventListener('click', function(e) {
     console.log("click !!");
+    console.log("MinClient :"+ $("#hidMinClient").val());
+    console.log("Limit :"+ $("#hidLimit").val());
+
     var input = document.getElementById('txtMesssage');
 
-    if (input.value) {
-       var data =JSON.stringify({
-        message: input.value
-       });
-      console.log("Message Sent:"+input.value);
-      socket.emit('message', data);
+    if (input.value!="") {
+      // var data =JSON.stringify({
+      //  message: input.value
+      // });
+      //console.log("Message Sent:"+input.value);
+      //socket.emit('message', data);
+
+
+      // Waiting result
+      // css on process bg.
+
+      // prepair datasets
+      var arguments={
+        csrfmiddlewaretoken:$('input[name=csrfmiddlewaretoken]').val(),
+        vpu: 0,
+        fixmvasc: 1,
+        tab: 2,
+        percenz: 3,
+        type: 'standard',
+        length: 4.0,
+        msg: input.value,
+      }
+      console.log("Message Sent to process:"+arguments);
+      socket.emit('startGame', {
+        from: "Client",
+        source: '{{ IP }}',
+        datasets: arguments
+      }, function (data) {
+
+        // process
+
+
+        // show data 
+
+        console.log('Got it', data);
+        console.log('Result is ready.', data);
+        
+        // disable btn
+
+
+        // Popup dialog to force rejoin if want to re-calculate.
+
+      });
+
+      // clear input element
       input.value = '';
     }
   });
 
-  // Implement Enter event on fire (Exercise.)
 
+  // first render, this script enable
+  // first touch
+  socket.emit('joidRoom', {
+          // register to server, for count user active in current pages
+				  ip: '{{ IP }}',
+				  token: $('input[name=csrfmiddlewaretoken]').val()
+	}, function (data) {
+				  console.log('push data to server!');
+          //notify number of concurrency
+          console.log('Server Health is');
+          console.log(data);
+          //
+          
+          //wating_clients:allClients.length,
+          //connected:numUsers
+          
+          var wating_queue = data.wating_clients;
+          var clients = data.connected;
+
+          //sweetalert use to notification.
+
+
+
+          //check btn Accessiable.
+          applyAccessiable(clients);
+
+	});
+
+  // first render, this script to check numOfUser.
+  /*socket.emit('getNumOfPlayers', function (data) {
+      console.log('Current Users =', data);
+      numOfUser=data;
+      maxClient=$("#hidMaxClient").val();
+      
+      if(numOfUser>maxClient){
+        
+        $("#btnSubmit").attr('disabled','disabled'); //disabled
+        console.log('disabled');
+      }else{
+        
+        $("#btnSubmit").removeAttr('disabled');// ena btn start
+        console.log('enabled');
+      }	
+      
+  });*/
 
 </script>
 <script type="text/javascript">
@@ -58,5 +149,20 @@
 //  $(document).ready(function () {
 //     console.log("Onload");
 //  });
+
+function applyAccessiable(current_q){
+   maxClient=$("#hidMaxClient").val(); //Maximum client to avaliable join to queue.
+   
+   if(current_q>maxClient){
+        //disabled
+        $("#btnSubmit").attr('disabled','disabled'); 
+        console.log('disabled');
+   }else{
+        // ena btn start
+        $("#btnSubmit").removeAttr('disabled');
+        console.log('enabled');
+  }	
+}
+
 </script>
 </html>

@@ -17,6 +17,8 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
+from django.conf import settings
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 #BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,8 +29,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-eh50_0bc4y4!+6fqm-4@4-w)4)ta#22-2+s=475phjs0pirb%6'
+#SECRET_KEY = ''
 
+SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -171,6 +174,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #custom env
 #CHART_PATH=env('CHART_PATH')
+MAXIMUM_CLIENT=env('MAXIMUM_CLIENT')
+LIMIT=env('LIMIT')
 
 ### Example for Read env in .py ###
 #from django.conf import settings
