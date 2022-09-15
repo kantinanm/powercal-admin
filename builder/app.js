@@ -112,18 +112,33 @@ io.on("connection", (socket) => {
         // process
 
 
-
-
         //if cal finish
         // release obj from array
-        // var recentClient = allClients.shift();
+        console.log('Release current quene processed.');
+        var recentClient = allClients.shift();
+        console.log('Count queue:', allClients.length);
+
+        //count allClients
+        var wating_clients= allClients.length;
+
+        //nextClient = allClients[0]; // next client still in queue.
         // var token_finished=recentClient.token;
 
+        nextToken =(allClients.length>=1)?allClients[0].token:'';// next client still in queue.
+
+        console.log('current token is ', recentClient.token);
+        console.log('next token is ', nextToken);
+
+        //boardcast to all client
+        var output={'current':recentClient.token,'next':nextToken,'wating_clients':wating_clients};
+        socket.broadcast.emit('announcer', output); // boardcast with data
+
+
         var result = {
-          time: moment.tz("Asia/Bangkok").format("YYYY-MM-DD THH:mm:ss.SSSZ"),
+          time: moment.tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm"),
           fileName: 'chart.png',
-          _token: token_finished,
-       };
+          _token: output,
+        };
 
         // set result to django
         callback(result);

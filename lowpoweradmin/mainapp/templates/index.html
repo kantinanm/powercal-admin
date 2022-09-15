@@ -13,6 +13,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="{% static 'js/main.min.js' %}"></script>
     <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!--<script src="/socket.io/socket.io.js"></script>-->
     <!--<link rel="stylesheet" href="{% static 'css/main.css' %}"> -->
 
@@ -25,6 +26,8 @@
     <input id="hidMaxClient" value="{{ MAXIMUM_CLIENT }}" type="hidden" />
     <input id="hidLimit" value="{% get_env_var 'LIMIT' %}" type="hidden" />
     {% csrf_token %}
+    <div id="lblStatus">จำนวนผู้ใช้งานทั้งหมด </div>
+    <div id="totalClient"></div>
 </body>
 
 <script>
@@ -40,9 +43,35 @@
   });
   // ---->
 
+
+  socket.on('announcer', function(data) {
+    console.log("Message from Server:");
+    console.log("The next queue is:"+data.next);
+    console.log("Client token is:"+$('input[name=csrfmiddlewaretoken]').val());
+    console.log("wating clients is:"+data.wating_clients);
+
+    if((data.wating_clients==1)&(data.next==$('input[name=csrfmiddlewaretoken]').val())){
+      //change lable text, set to 'พร้อมคำนวณ!!!'
+      $("#lblStatus").html('พร้อมคำนวณ!!!');
+      $("#totalClient").html('');
+    }else{
+      //update lable total_client (Display client)
+      $("#lblStatus").html('จำนวนผู้ใช้งานทั้งหมด');
+      $("#totalClient").html(data.wating_clients);
+    }
+
+    //decide to ena or disable btnSubmit
+    if(data.next!=''){
+      // have queue
+      applyReady(data.next);
+    }
+
+  });
+
+
   submit.addEventListener('click', function(e) {
     console.log("click !!");
-    console.log("MinClient :"+ $("#hidMinClient").val());
+    console.log("MinClient :"+ $("#hidMaxClient").val());
     console.log("Limit :"+ $("#hidLimit").val());
 
     var input = document.getElementById('txtMesssage');
@@ -70,6 +99,7 @@
         msg: input.value,
       }
       console.log("Message Sent to process:"+arguments);
+      
       socket.emit('startGame', {
         from: "Client",
         source: '{{ IP }}',
@@ -78,21 +108,26 @@
 
         // process
 
-
         // show data 
 
         console.log('Got it', data);
         console.log('Result is ready.', data);
         
         // disable btn
+        $("#btnSubmit").attr('disabled','disabled'); 
+        console.log('disabled');
 
 
         // Popup dialog to force rejoin if want to re-calculate.
+        // force to redirect page, (join queue again)
 
       });
 
       // clear input element
       input.value = '';
+      $("#lblStatus").html('');
+      $("#totalClient").html('');
+
     }
   });
 
@@ -116,12 +151,13 @@
           var wating_queue = data.wating_clients;
           var clients = data.connected;
 
+          $("#totalClient").html(wating_queue);
+
           //sweetalert use to notification.
 
 
-
           //check btn Accessiable.
-          applyAccessiable(clients);
+          applyAccessiable(wating_queue);
 
 	});
 
@@ -162,6 +198,23 @@ function applyAccessiable(current_q){
         $("#btnSubmit").removeAttr('disabled');
         console.log('enabled');
   }	
+}
+
+function applyReady(token){
+
+   if(token==$('input[name=csrfmiddlewaretoken]').val()){
+        // ena btn start
+        $("#btnSubmit").removeAttr('disabled');
+        console.log('enabled');
+        $("#lblStatus").html('พร้อมคำนวณ!!!');
+        $("#totalClient").html('');   
+        
+        // notify user
+        Swal.fire({
+          title: 'Server Ready.',
+          text: 'ถึงตาคุณแล้ว',
+        });
+  }
 }
 
 </script>
