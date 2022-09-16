@@ -33,13 +33,17 @@ const server = http.createServer(app);
 const io = require('socket.io')(server, {
     cors: corsOptions
 });
-const welcomeMsg = "โปรแกรมวิเคราะห์ทางไฟฟ้า, ภาควิชาวิศวกรรมไฟฟ้าและคอมพิวเตอร์ คณะวิศวกรรมศาสตร์, Lower-Voltage System Analysis Tools";
+const welcomeMsg = "Lower-Voltage System Analysis Tools";
 
 io.on("connection", (socket) => {
     console.log("a user connected");
     ++numUsers;
     
     socket.emit("hi", welcomeMsg);
+    socket.broadcast.emit('party', (allClients.length)+1); // boardcast with data
+
+
+
   
     socket.on("disconnect", () => {
       console.log("user disconnected");
@@ -52,7 +56,37 @@ io.on("connection", (socket) => {
 
       //console.log(result);
 
-      numUsers--; // decrease users
+    // const fruits = [
+    //     {name: 'apples', quantity: 2},
+    //     {name: 'bananas', quantity: 0},
+    //     {name: 'cherries', quantity: 5}
+    // ];
+    
+    // const getFruit = fruits.find(fruit => fruit.name === 'apples');
+    
+    // console.log(getFruit);
+
+    const index = allClients.findIndex(object => {
+      return object.token === socket.token;
+    });
+
+    console.log(`Index is :${index} from ${allClients.length}`);
+
+    if(index!=-1){
+      //find in queue
+      const destroyClient = allClients.find(objSocket => objSocket.token === socket.token);
+      console.log(`Destroy Client is:${destroyClient.token} , IP:${destroyClient.ip} `);
+      console.log(destroyClient);
+      
+      //remove from array allClients []
+      console.log("Remove array");
+      allClients.splice(index, 1);
+      console.log("Remain item is");
+      console.log(allClients);
+    }
+
+    numUsers--; // decrease users
+
     });
   
     socket.on("message", (data) => {

@@ -68,6 +68,21 @@
 
   });
 
+  socket.on('party', function(clients) {
+    console.log("Update clients:");
+
+    if((clients==1)){
+      //change lable text, set to 'พร้อมคำนวณ!!!'
+      $("#lblStatus").html('พร้อมคำนวณ!!!');
+      $("#totalClient").html('');
+    }else{
+      //update lable total_client (Display client)
+      $("#lblStatus").html('จำนวนผู้ใช้งานทั้งหมด');
+      $("#totalClient").html(clients);
+    }
+
+  });
+
 
   submit.addEventListener('click', function(e) {
     console.log("click !!");
